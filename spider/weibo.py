@@ -6,20 +6,20 @@ u'''
 '''
 import base64
 import binascii
-import simplejson
 import re
 import traceback
 import urllib
 
 import requests
 import rsa
+import simplejson
 
 
 class Weibo(object):
-    def __init__(self, username, passwd):
+    def __init__(self):
         self.sess = requests.Session()
-        self.username = username
-        self.passwd = passwd
+        self.username = ""
+        self.passwd = ""
 
     def _get_user(self, username):
         username = urllib.quote(username)
@@ -31,8 +31,8 @@ class Weibo(object):
         passwd = rsa.encrypt(message, key)
         return binascii.b2a_hex(passwd)
 
-    def _prelogin(self):
-        username = self._get_user(self.username)
+    def _prelogin(self, username):
+        username = self._get_user(username)
         prelogin_url = (r'http://login.sina.com.cn/sso/prelogin.php?'
                         'entry=sso&callback=sinaSSOController.preloginCallBack'
                         '&su=%s&rsakt=mod&client=ssologin.js(v1.4.18)' % username)
@@ -47,7 +47,9 @@ class Weibo(object):
         except Exception:
             traceback.print_exc()
 
-    def login(self):
+    def login(self, username, passwd):
+        self.username = username
+        self.passwd = passwd
         login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
 
         try:
