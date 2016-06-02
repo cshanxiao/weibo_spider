@@ -24,4 +24,5 @@ logging.basicConfig(level=log_levels[LOG_LEVEL],
                     filemode=LOG_FILEMODE
                     )
 
+log = logging
 

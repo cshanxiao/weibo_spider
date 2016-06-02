@@ -8,5 +8,5 @@ from spider.vipspider import VipSpider
 
 if __name__ == '__main__':
     vipspider = VipSpider()
-    vipspider.login("xxx", "xxx")
+    print vipspider.login("xxx", "xxx")
 

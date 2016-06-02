@@ -4,34 +4,45 @@ u'''
 @author: Administrator
 @date: 2016年3月14日
 '''
-from spider.log import logging
-from spider.weibo import Weibo
 import redis
+import time
+from datetime import datetime
+
+from spider.common.followee_parser import FolloweeParser
+from spider.log import log
+from spider.weibo import Weibo
+
 
 class VipSpider(Weibo):
     def __init__(self):
         Weibo.__init__(self)
+        self.parser = FolloweeParser()
+
+    def ban_account(self):
+        url = 'http://sass.weibo.com/unfreeze'
+        html = self.sess.get(url)
+        is_exceptional = self.parser.is_exceptional(html)
+        is_frozen = self.parser.is_frozen(html)
+        if is_exceptional is False and is_frozen is False:
+            return
 
     def get_followees(self, pid):
         url = 'http://www.weibo.com/p/' + pid + '/follow?from=page_' + pid[:6] + '&wvr=6&mod=headfollow#place'
         while True:
-            fetcher = self.fetchers[self.main_fetcher]
-            html = open_url(fetcher, url)
-
+            html = self.sess.get(url)
             uid = self.parser.parse_uid(html)
             if uid == -1:
-                self.ban_account()
                 continue
             elif self.parser.is_visitor(html) is True:
                 self.reset_account()
                 continue
 
-            fee_page_num = self.get_followee_page_num(html)
+            fee_page_num = self.parse_followee_page_num(html)
             if fee_page_num is not None:
                 break
             else:
                 log.warning('Cannot get followee page total number - pid:%s' % (pid,))
-                time.sleep(random.randint(Config.SLEEP_WHEN_EXCEPTION, 2 * Config.SLEEP_WHEN_EXCEPTION))
+                time.sleep(5)
 
         if fee_page_num == 0:
             print 'He/She does not follow any one.'
@@ -46,12 +57,12 @@ class VipSpider(Weibo):
                 while True:
                     url = 'http://www.weibo.com/p/%s/follow?from=page_%s&wvr=6&mod=headfollow&page=%d#place' % (pid, pid[:6], i)
                     print 'Getting followee page %d of %d...' % (i, fee_page_num)
-                    html = open_url(fetcher, url)
-                    time.sleep(random.randint(Config.SLEEP_BETWEEN_2FPAGES, 2 * Config.SLEEP_BETWEEN_2FPAGES))
+                    html = self.sess.get(url)
+                    time.sleep(5)
                     followees = self.parser.parse_followees(html, pid, datetime.now())
                     if followees is None:  # dirty html
                         log.warning('Cannot parse followee page correctly - pid:%s' % (pid,))
-                        time.sleep(random.randint(Config.SLEEP_WHEN_EXCEPTION, 2 * Config.SLEEP_WHEN_EXCEPTION))
+                        time.sleep(5)
                         continue
                     self.followee_list.extend(followees)
                     break

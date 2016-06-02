@@ -53,7 +53,7 @@ class Weibo(object):
         login_url = 'http://login.sina.com.cn/sso/login.php?client=ssologin.js(v1.4.18)'
 
         try:
-            servertime, nonce, pubkey, rsakv = self._prelogin()
+            servertime, nonce, pubkey, rsakv = self._prelogin(self.username)
             postdata = {
                 'entry': 'weibo',
                 'gateway': '1',
@@ -100,6 +100,5 @@ class Weibo(object):
         except Exception:
             traceback.print_exc()
             return False, ""
-
 
 
